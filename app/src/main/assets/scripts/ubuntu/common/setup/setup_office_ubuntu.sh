@@ -18,8 +18,8 @@ PKGS=(
     libreoffice-calc
     libreoffice-impress
     thunderbird
-    evince
     papers
+    evince
     xournalpp
     fonts-noto
 )
@@ -124,7 +124,7 @@ echo "FluxLinux: Installing Email & Organization Tools..."
 # Ubuntu ships thunderbird as a snap transitional deb (24.04+). snapd cannot
 # run under proot and is pointless in chroot, so install only the real deb.
 # Non-fatal: mail is optional, LibreOffice is the headline of this stack.
-if apt-cache depends thunderbird 2>/dev/null | grep -qE 'Depends:[[:space:]]*snapd'; then
+if apt-cache depends thunderbird 2>/dev/null | grep -qE '^[[:space:]]*(Pre)?Depends:[[:space:]]*snapd'; then
     echo " [⚠️] thunderbird in this release is a snap transitional package — skipped."
     echo "      Install a real deb manually if you need it (no PPAs)."
 else
@@ -134,14 +134,15 @@ fi
 
 # 4. PDF Tools
 echo "FluxLinux: Installing PDF Tools..."
-# GNOME renamed Evince to Papers; 26.04 may ship either (evince can be a
-# transitional shim). Try evince, fall back to papers, then xournalpp.
+# GNOME renamed Evince to Papers. On 26.04 papers is the stable release in
+# main (50.x) while evince is still an alpha in universe (49~alpha), so try
+# papers first and keep evince as the fallback for older bases.
 # Non-fatal: LibreOffice can open PDFs anyway.
-if ! apt install -y --no-install-recommends evince 2>/dev/null; then
+if ! apt install -y --no-install-recommends papers 2>/dev/null; then
     apt --fix-broken install -y 2>/dev/null || true
     dpkg --configure -a 2>/dev/null || true
-    apt install -y --no-install-recommends papers 2>/dev/null || \
-        echo " [⚠️] No PDF viewer installed (evince/papers unavailable). LibreOffice can still open PDFs."
+    apt install -y --no-install-recommends evince 2>/dev/null || \
+        echo " [⚠️] No PDF viewer installed (papers/evince unavailable). LibreOffice can still open PDFs."
 fi
 
 apt install -y --no-install-recommends xournalpp 2>/dev/null || \
@@ -159,10 +160,10 @@ verify_installation() {
 
     if command -v libreoffice >/dev/null; then echo " [✅] LibreOffice"; else echo " [❌] LibreOffice Missing"; fi
     if command -v thunderbird >/dev/null; then echo " [✅] Thunderbird"; else echo " [⚠️] Thunderbird Skipped"; fi
-    if command -v evince >/dev/null; then
-        echo " [✅] Evince"
-    elif command -v papers >/dev/null; then
+    if command -v papers >/dev/null; then
         echo " [✅] Papers"
+    elif command -v evince >/dev/null; then
+        echo " [✅] Evince"
     else
         echo " [⚠️] PDF Viewer Missing"
     fi

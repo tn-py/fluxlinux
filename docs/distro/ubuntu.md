@@ -20,6 +20,6 @@ Family rewrites DEB822 `ubuntu.sources` URIs from amd64 archive/security to Ubun
 
 - Enables the `universe` component in place (DEB822 `ubuntu.sources` or legacy `sources.list`) — `thunderbird`, `xournalpp`, `npm` and `fonts-noto` are not in `main`. Never appends a new archive or PPA entry.
 - Skips `thunderbird` when the archive package is a snap transitional deb (24.04+), since `snapd` cannot run under proot.
-- Falls back to `papers` when `evince` is unavailable (GNOME renamed it); a missing PDF viewer is non-fatal because LibreOffice opens PDFs.
+- Installs `papers` (GNOME's renamed Evince) rather than `evince`: on 26.04 `papers` is the stable release in `main` (50.x) while `evince` is an alpha in `universe` (49~alpha). `evince` stays as the fallback for older bases, and a missing PDF viewer is non-fatal because LibreOffice opens PDFs.
 
 See [docs/plan/ubuntu-kali-parrot-arch.md](../plan/ubuntu-kali-parrot-arch.md).
