@@ -51,6 +51,7 @@ data class TerminalShellAvailability(
     val kaliProot: Boolean = false,
     val parrotProot: Boolean = false,
     val archlinuxProot: Boolean = false,
+    val omarchyProot: Boolean = false,
     val debianChroot: Boolean,
     val alpineChroot: Boolean,
     val fedoraChroot: Boolean = false,
@@ -63,6 +64,7 @@ data class TerminalShellAvailability(
     val kaliChroot: Boolean = false,
     val parrotChroot: Boolean = false,
     val archlinuxChroot: Boolean = false,
+    val omarchyChroot: Boolean = false,
     val rootAvailable: Boolean
 ) {
     /** Back-compat aliases used by older tests / call sites. */
@@ -82,6 +84,7 @@ data class TerminalShellAvailability(
         "kali" -> kaliProot
         "parrot" -> parrotProot
         "archlinux" -> archlinuxProot
+        "omarchy" -> omarchyProot
         else -> false
     }
 
@@ -98,6 +101,7 @@ data class TerminalShellAvailability(
         "kali_chroot" -> kaliChroot
         "parrot_chroot" -> parrotChroot
         "archlinux_chroot" -> archlinuxChroot
+        "omarchy_chroot" -> omarchyChroot
         else -> false
     }
 }
@@ -117,6 +121,7 @@ object TerminalShellCatalog {
             "kali" -> "Kali" to R.drawable.distro_kali
             "parrot" -> "Parrot" to R.drawable.distro_parrot
             "archlinux" -> "Arch" to R.drawable.distro_arch
+            "omarchy" -> "Omarchy-style" to R.drawable.distro_arch
             else -> "Debian" to R.drawable.distro_debian
         }
         return listOf(
@@ -163,6 +168,8 @@ object TerminalShellCatalog {
                 Triple("Parrot Chroot", R.drawable.distro_parrot, "parrot_chroot")
             "archlinux_chroot", "archlinux" ->
                 Triple("Arch Chroot", R.drawable.distro_arch, "archlinux_chroot")
+            "omarchy_chroot", "omarchy" ->
+                Triple("Omarchy-style Chroot", R.drawable.distro_arch, "omarchy_chroot")
             else ->
                 Triple("Debian Chroot", R.drawable.distro_debian, "debian13_chroot")
         }
@@ -210,6 +217,7 @@ object TerminalShellCatalog {
             kaliProot = TerminalLauncher.isProotInstalled(ctx, "kali"),
             parrotProot = TerminalLauncher.isProotInstalled(ctx, "parrot"),
             archlinuxProot = TerminalLauncher.isProotInstalled(ctx, "archlinux"),
+            omarchyProot = TerminalLauncher.isProotInstalled(ctx, "omarchy"),
             debianChroot = TerminalLauncher.isChrootInstalled(ChrootPaths.DEBIAN_CHROOT_PATH),
             alpineChroot = TerminalLauncher.isChrootInstalled(ChrootPaths.ALPINE_CHROOT_PATH),
             fedoraChroot = TerminalLauncher.isChrootInstalled(ChrootPaths.FEDORA_CHROOT_PATH),
@@ -222,6 +230,7 @@ object TerminalShellCatalog {
             kaliChroot = TerminalLauncher.isChrootInstalled(ChrootPaths.KALI_CHROOT_PATH),
             parrotChroot = TerminalLauncher.isChrootInstalled(ChrootPaths.PARROT_CHROOT_PATH),
             archlinuxChroot = TerminalLauncher.isChrootInstalled(ChrootPaths.ARCH_CHROOT_PATH),
+            omarchyChroot = TerminalLauncher.isChrootInstalled(ChrootPaths.OMARCHY_CHROOT_PATH),
             rootAvailable = rootAvailable
         )
 
@@ -285,6 +294,7 @@ object TerminalShellCatalog {
             prootSection("KALI", "kali", avail.prootInstalled("kali")),
             prootSection("PARROT", "parrot", avail.prootInstalled("parrot")),
             prootSection("ARCHLINUX", "archlinux", avail.prootInstalled("archlinux")),
+            prootSection("OMARCHY", "omarchy", avail.prootInstalled("omarchy")),
             chrootSection("DEBIAN", "debian13_chroot", avail.chrootInstalled("debian13_chroot")),
             chrootSection("ALPINE", "alpine_chroot", avail.chrootInstalled("alpine_chroot")),
             chrootSection("FEDORA", "fedora_chroot", avail.chrootInstalled("fedora_chroot")),
@@ -297,6 +307,7 @@ object TerminalShellCatalog {
             chrootSection("KALI", "kali_chroot", avail.chrootInstalled("kali_chroot")),
             chrootSection("PARROT", "parrot_chroot", avail.chrootInstalled("parrot_chroot")),
             chrootSection("ARCHLINUX", "archlinux_chroot", avail.chrootInstalled("archlinux_chroot")),
+            chrootSection("OMARCHY", "omarchy_chroot", avail.chrootInstalled("omarchy_chroot")),
             TerminalShellSection(
                 title = "HOST",
                 subtitle = "OPTIONAL",

@@ -302,6 +302,48 @@ Opens a `su` root terminal in Termux. If your chroot needs a specific mount comm
 
 ---
 
+### Step 6.5 — Non-XFCE Guests: the Session Marker
+
+**Skip this if your distro runs XFCE4** — that is the default and needs nothing.
+
+Every guest ran XFCE until the Omarchy-style card added i3, so the start scripts
+used to hardcode `startxfce4`. The desktop is now an explicit axis, tracked the
+same way GPU mode already is — a file in the guest rootfs:
+
+```
+/etc/fluxlinux/session   →   "xfce" (default) | "i3"
+```
+
+**An absent file means `xfce`**, so nothing you do here can affect existing guests.
+
+To add a guest on a different desktop:
+
+1. **`GuestSessionCatalog.kt`** (`core/desktop/`) — map your `distro.id` in
+   `sessionFor`, and add the session to `sessionBinaries` (the paths that prove
+   it installed), `launchCommand` (what the start script execs) and
+   `displayName` (what install logs say).
+2. **Family setup script** — call `_flux_write_session <id>` before exiting, and
+   guard the install with a `_flux_require_<session>` helper in
+   `flux_guest_common.sh` so a half-install fails loudly instead of reporting
+   success with nothing to launch.
+3. **Start scripts** — add a branch to `debian/proot/start/start_gui.sh` and
+   `chroot/start_guest_gui.sh`. Both read the marker, default to `xfce`, and pick
+   the readiness check plus the command they exec under dbus.
+4. **Install a session launcher** if the desktop has no `startxfce4` equivalent.
+   `setup_omarchy_family.sh` writes `/usr/local/bin/flux-i3-session`, which brings
+   up the bar, notifier and wallpaper and then `exec`s the WM. Keep every helper
+   optional — a missing bar must never cost the user their window manager.
+5. **Ship a working config.** Bare i3 with no config launches `i3-config-wizard`,
+   which blocks on a keypress and reads as a hang on a phone. Write the config in
+   the *family* script and have customization rewrite only the palette, so
+   re-running customization cannot cost the user their keybindings.
+
+Onboarding verification (`OnboardingInstallRunner`) and chroot detection
+(`ChrootDetection.isSessionInstalled`) both read the catalog, so they follow
+automatically once step 1 is done.
+
+---
+
 ### Step 7 — Add the Distro Icon
 
 Place a vector drawable in `app/src/main/res/drawable/`:
@@ -344,6 +386,7 @@ Scripts
 
 Kotlin
  [ ] SupportedDistro entry added (DistroSpec.kt)  — if new family
+ [ ] GuestSessionCatalog mapping added  — if NOT an XFCE4 guest (Step 6.5)
  [ ] Components list defined  (DistroRepository.kt)
  [ ] Distro entry added to supportedDistros list  (DistroRepository.kt)
  [ ] baseScriptName when-branch added  (TermuxIntentFactory.kt)  — if unique base script

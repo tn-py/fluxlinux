@@ -129,5 +129,17 @@ enum class SupportedDistro(
         family = DistroFamily.ARCH,
         packageManager = PackageManager.PACMAN,
         releaseType = ReleaseType.ROLLING
+    ),
+
+    /**
+     * Omarchy-style guest: Arch Linux ARM underneath, i3 on X11 instead of
+     * upstream Omarchy's Hyprland (Wayland, x86_64-only). Same rootfs and
+     * package manager as [ARCH]; only the desktop layer differs.
+     */
+    OMARCHY(
+        id = "omarchy",
+        family = DistroFamily.ARCH,
+        packageManager = PackageManager.PACMAN,
+        releaseType = ReleaseType.ROLLING
     )
 }

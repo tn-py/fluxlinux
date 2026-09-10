@@ -26,6 +26,9 @@ object ChrootPaths {
     const val PARROT_CHROOT_PATH = "/data/local/tmp/chrootParrot"
     const val ARCH_CHROOT_PATH = "/data/local/tmp/chrootArch"
 
+    /** Omarchy-style guest. Separate rootfs from Arch: same base, different desktop. */
+    const val OMARCHY_CHROOT_PATH = "/data/local/tmp/chrootOmarchy"
+
     /**
      * Default chroot path for unscoped APIs (settings / legacy).
      * Prefer [DEBIAN_CHROOT_PATH] / [ALPINE_CHROOT_PATH] or profile.chrootPath.
@@ -54,6 +57,7 @@ object ChrootPaths {
         "kali_chroot" -> KALI_CHROOT_PATH
         "parrot_chroot" -> PARROT_CHROOT_PATH
         "archlinux_chroot" -> ARCH_CHROOT_PATH
+        "omarchy_chroot" -> OMARCHY_CHROOT_PATH
         else -> CHROOT_PATH
     }
 }

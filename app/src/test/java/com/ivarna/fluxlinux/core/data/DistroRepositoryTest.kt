@@ -3,6 +3,7 @@ package com.ivarna.fluxlinux.core.data
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import com.ivarna.fluxlinux.core.model.SupportedDistro
 import org.junit.Test
 
 /**
@@ -43,12 +44,16 @@ class DistroRepositoryTest {
         assertTrue(available.contains("parrot_chroot"))
         assertTrue(available.contains("archlinux"))
         assertTrue(available.contains("archlinux_chroot"))
-        assertEquals(24, available.size)
+        assertTrue(available.contains("omarchy"))
+        assertTrue(available.contains("omarchy_chroot"))
+        assertEquals(26, available.size)
     }
 
     @Test
     fun newPairs_areProotOnly_and_chrootOnly() {
-        listOf("deepin", "chimera", "manjaro", "ubuntu", "kali", "parrot", "archlinux").forEach { id ->
+        listOf(
+            "deepin", "chimera", "manjaro", "ubuntu", "kali", "parrot", "archlinux", "omarchy"
+        ).forEach { id ->
             val proot = DistroRepository.supportedDistros.first { it.id == id }
             assertFalse(proot.comingSoon)
             assertTrue(proot.prootSupported)
@@ -70,7 +75,8 @@ class DistroRepositoryTest {
             "ubuntu", "ubuntu_chroot",
             "kali", "kali_chroot",
             "parrot", "parrot_chroot",
-            "archlinux", "archlinux_chroot"
+            "archlinux", "archlinux_chroot",
+            "omarchy", "omarchy_chroot"
         ).forEach { id ->
             val distro = DistroRepository.supportedDistros.first { it.id == id }
             val ids = distro.components.map { it.id }
@@ -86,12 +92,42 @@ class DistroRepositoryTest {
         val scripts = DistroRepository.supportedDistros
             .filter { it.id in setOf(
                 "deepin", "chimera", "manjaro",
-                "ubuntu", "kali", "parrot", "archlinux"
+                "ubuntu", "kali", "parrot", "archlinux", "omarchy"
             ) }
             .flatMap { it.components }
             .map { it.scriptName }
         assertFalse(scripts.any { it.contains("debian/") })
         assertFalse(scripts.any { it.startsWith("debian") })
+    }
+
+    @Test
+    fun omarchyCards_useOmarchyScripts_notXfce() {
+        listOf("omarchy", "omarchy_chroot").forEach { id ->
+            val distro = DistroRepository.supportedDistros.first { it.id == id }
+            val scripts = distro.components.map { it.scriptName }
+            assertTrue(
+                "$id must use the omarchy family script",
+                scripts.contains("omarchy/common/setup/setup_omarchy_family.sh")
+            )
+            assertTrue(
+                "$id must use the omarchy customization script",
+                scripts.contains("omarchy/common/setup/setup_customization_omarchy.sh")
+            )
+            assertFalse(
+                "$id runs i3, so it must not pull the shared XFCE customization",
+                scripts.any { it.contains("setup_customization_xfce") }
+            )
+        }
+    }
+
+    @Test
+    fun omarchyCards_shareArchIcon_andDistinctIds() {
+        val arch = DistroRepository.supportedDistros.first { it.id == "archlinux" }
+        val omarchy = DistroRepository.supportedDistros.first { it.id == "omarchy" }
+        // Arch Linux ARM underneath, so the Arch mark is the honest one until a
+        // dedicated drawable lands.
+        assertEquals(arch.iconRes, omarchy.iconRes)
+        assertEquals(SupportedDistro.OMARCHY, omarchy.configuration)
     }
 
     @Test

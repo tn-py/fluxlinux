@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import com.ivarna.fluxlinux.core.desktop.GuestSessionCatalog
 import com.ivarna.fluxlinux.core.root.RootShell
 import com.ivarna.fluxlinux.core.service.BaseInstallService
 import com.ivarna.fluxlinux.core.terminal.GpuAccelDetector
@@ -259,14 +260,20 @@ class OnboardingInstallRunner(private val ctx: Context) {
             postFail(onProgress, phases, "${profile.displayName} rootfs missing after install")
             return
         }
-        if (!isProotXfceInstalled(appCtx, profile.prootName)) {
+        val session = GuestSessionCatalog.sessionFor(distroId)
+        val sessionName = GuestSessionCatalog.displayName(session)
+        if (!isProotSessionInstalled(appCtx, profile.prootName, session)) {
             postFail(
                 onProgress, phases,
-                "XFCE not found after install (startxfce4 missing). Retry setup."
+                "$sessionName not found after install " +
+                    "(${GuestSessionCatalog.launchCommand(session)} missing). Retry setup."
             )
             return
         }
-        completePhase(phases, rootfsIdx, onProgress, "${profile.displayName} + XFCE installed")
+        completePhase(
+            phases, rootfsIdx, onProgress,
+            "${profile.displayName} + $sessionName installed"
+        )
 
         enter(phases, customIdx, onProgress, "Themes, wallpapers, fonts…")
         if (abortIfCancelled(gen, phases, onProgress)) return
@@ -458,7 +465,9 @@ class OnboardingInstallRunner(private val ctx: Context) {
         log(phases, rootfsIdx, onProgress, "Chroot rootfs verified (root probe)")
         completePhase(phases, rootfsIdx, onProgress, "Chroot rootfs ready")
 
-        enter(phases, xfceIdx, onProgress, "Installing XFCE packages…")
+        val session = GuestSessionCatalog.sessionFor(distroId)
+        val sessionName = GuestSessionCatalog.displayName(session)
+        enter(phases, xfceIdx, onProgress, "Installing $sessionName packages…")
         if (abortIfCancelled(gen, phases, onProgress)) return
         val familyPayload = BaseDesktopInstallPlan.familySetupPayload(appCtx, theme, distroId)
         val familyExit = runChrootGuestBlocking(
@@ -466,17 +475,18 @@ class OnboardingInstallRunner(private val ctx: Context) {
         )
         if (abortIfCancelled(gen, phases, onProgress)) return
         if (familyExit != 0) {
-            postFail(onProgress, phases, "XFCE setup failed (exit $familyExit)")
+            postFail(onProgress, phases, "$sessionName setup failed (exit $familyExit)")
             return
         }
-        if (!TerminalLauncher.isChrootXfceInstalled(chrootPath)) {
+        if (!TerminalLauncher.isChrootSessionInstalled(chrootPath, session)) {
             postFail(
                 onProgress, phases,
-                "XFCE not found after family setup (startxfce4 missing). Retry."
+                "$sessionName not found after family setup " +
+                    "(${GuestSessionCatalog.launchCommand(session)} missing). Retry."
             )
             return
         }
-        completePhase(phases, xfceIdx, onProgress, "XFCE installed")
+        completePhase(phases, xfceIdx, onProgress, "$sessionName installed")
 
         enter(phases, customIdx, onProgress, "Themes, wallpapers, fonts…")
         if (abortIfCancelled(gen, phases, onProgress)) return
@@ -856,10 +866,14 @@ class OnboardingInstallRunner(private val ctx: Context) {
         }
     }
 
-    private fun isProotXfceInstalled(ctx: Context, prootName: String = "debian"): Boolean {
+    /** True when [session]'s launcher is present in the proot rootfs. */
+    private fun isProotSessionInstalled(
+        ctx: Context,
+        prootName: String = "debian",
+        session: String = GuestSessionCatalog.XFCE
+    ): Boolean {
         val root = File(ctx.filesDir, "usr/var/lib/proot-distro/containers/$prootName/rootfs")
-        return File(root, "usr/bin/startxfce4").exists() ||
-            File(root, "usr/sbin/startxfce4").exists()
+        return GuestSessionCatalog.sessionBinaries(session).any { File(root, it).exists() }
     }
 
     companion object {

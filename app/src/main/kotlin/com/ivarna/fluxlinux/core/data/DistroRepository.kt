@@ -235,6 +235,40 @@ object DistroRepository {
         "arch/common/setup/setup_arch_family.sh"
     )
 
+    /**
+     * Omarchy-style guest components. Not [glibcXfceComponents]: this guest
+     * runs i3, so its base and customization scripts differ, and the labels
+     * must say i3 rather than XFCE4 or the Distro Settings screen would offer
+     * to install a desktop the guest does not have.
+     */
+    private val omarchyComponents = listOf(
+        DistroComponent(
+            id = "xfce4_desktop",
+            name = "i3 Desktop (Omarchy-style)",
+            description =
+                "Arch ARM base plus i3, rofi, dunst, picom and the Omarchy CLI stack.",
+            scriptName = "omarchy/common/setup/setup_omarchy_family.sh",
+            sizeEstimate = "500 MB",
+            isMandatory = false
+        ),
+        DistroComponent(
+            id = "hw_accel",
+            name = "Hardware Acceleration",
+            description = "Turnip (Adreno) or VirGL GPU setup for this guest.",
+            scriptName = "common/setup/setup_hw_accel_guest.sh",
+            sizeEstimate = "80 MB",
+            isMandatory = true
+        ),
+        DistroComponent(
+            id = "customization",
+            name = "Omarchy Theme",
+            description =
+                "Tokyo Night across i3, polybar, rofi, dunst and alacritty, plus zsh + starship.",
+            scriptName = "omarchy/common/setup/setup_customization_omarchy.sh",
+            sizeEstimate = "150 MB"
+        )
+    )
+
     val supportedDistros = listOf(
         // Currently Available
         Distro(
@@ -408,6 +442,33 @@ object DistroRepository {
             chrootSupported = true,
             configuration = SupportedDistro.CHIMERA,
             components = chimeraComponents
+        ),
+        // Omarchy-style: Arch Linux ARM + i3. Upstream Omarchy (omarchy.org) is
+        // x86_64-only and ships Hyprland, a Wayland compositor that cannot
+        // attach to our X11 (Lorie) display — hence "-style", not "Omarchy".
+        Distro(
+            id = "omarchy",
+            name = "Omarchy-style (Arch)",
+            description = "Omarchy-inspired i3 desktop on Arch Linux ARM (proot).",
+            color = Color(0xFF7AA2F7),
+            iconRes = R.drawable.distro_arch,
+            comingSoon = false,
+            prootSupported = true,
+            chrootSupported = false,
+            configuration = SupportedDistro.OMARCHY,
+            components = omarchyComponents
+        ),
+        Distro(
+            id = "omarchy_chroot",
+            name = "Omarchy-style (Rooted)",
+            description = "Omarchy-inspired i3 desktop on Arch Linux ARM chroot (Requires Root).",
+            color = Color(0xFF7AA2F7),
+            iconRes = R.drawable.distro_arch,
+            comingSoon = false,
+            prootSupported = false,
+            chrootSupported = true,
+            configuration = SupportedDistro.OMARCHY,
+            components = omarchyComponents
         ),
         Distro(
             id = "manjaro",

@@ -78,6 +78,14 @@ case "$DISTRO" in
         ROOTFS_SHA256="${FLUX_ROOTFS_SHA256:-40209ef6318d3aad732299d46ce224c6a0ecded80b6f8091f5e38b40fa031d75}"
         FAMILY_SCRIPT_NAME="setup_arch_family.sh"
         ;;
+    omarchy)
+        # Same Arch Linux ARM archive as the archlinux card — only the family
+        # script differs, so the pinned name/SHA must stay identical to above.
+        ROOTFS_NAME="${FLUX_ROOTFS_NAME:-archlinux_arm_rootfs.tar.xz}"
+        ROOTFS_URL="${FLUX_ROOTFS_URL:-https://github.com/abhay-byte/fluxlinux/releases/download/rootfs/archlinux_arm_rootfs.tar.xz}"
+        ROOTFS_SHA256="${FLUX_ROOTFS_SHA256:-40209ef6318d3aad732299d46ce224c6a0ecded80b6f8091f5e38b40fa031d75}"
+        FAMILY_SCRIPT_NAME="setup_omarchy_family.sh"
+        ;;
     *)
         ROOTFS_NAME="${FLUX_ROOTFS_NAME:-debian_13_rootfs.tar.xz}"
         ROOTFS_URL="${FLUX_ROOTFS_URL:-https://github.com/abhay-byte/fluxlinux/releases/download/rootfs/debian_13_rootfs.tar.xz}"

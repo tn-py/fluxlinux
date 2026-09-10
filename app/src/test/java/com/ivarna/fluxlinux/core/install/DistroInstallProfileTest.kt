@@ -40,6 +40,39 @@ class DistroInstallProfileTest {
     }
 
     @Test
+    fun omarchy_proot_profile_reusesArchRootfs() {
+        val oma = DistroInstallProfile.require("omarchy")
+        val arch = DistroInstallProfile.require("archlinux")
+        assertEquals("proot", oma.method)
+        assertEquals("omarchy", oma.prootName)
+        // Same ALARM archive as the Arch card: one release asset, one SHA. If
+        // these ever diverge, a second rootfs must be uploaded and pinned first
+        // (docs/adding_new_distro.md Step 5.5).
+        assertEquals(arch.rootfsFileName, oma.rootfsFileName)
+        assertEquals(arch.rootfsSha256, oma.rootfsSha256)
+        assertEquals(arch.rootfsUrl, oma.rootfsUrl)
+        // But a distinct container, so installing one never clobbers the other.
+        assertFalse(oma.prootName == arch.prootName)
+        assertTrue(oma.familyScript.contains("omarchy"))
+        assertTrue(oma.customizationScript.contains("omarchy"))
+        assertNull(oma.chrootPath)
+    }
+
+    @Test
+    fun omarchy_chroot_profile_hasOwnRootfsPath() {
+        val oma = DistroInstallProfile.require("omarchy_chroot")
+        assertEquals("chroot", oma.method)
+        assertEquals(ChrootPaths.OMARCHY_CHROOT_PATH, oma.chrootPath)
+        assertFalse(
+            "must not share the Arch chroot rootfs",
+            oma.chrootPath == ChrootPaths.ARCH_CHROOT_PATH
+        )
+        assertEquals("start_guest_gui.sh", oma.chrootStartGuiScript)
+        assertNotNull(oma.chrootSetupAsset)
+        assertTrue(oma.familyScript.contains("omarchy"))
+    }
+
+    @Test
     fun alpine_chroot_profile() {
         val p = DistroInstallProfile.require("alpine_chroot")
         assertEquals("chroot", p.method)

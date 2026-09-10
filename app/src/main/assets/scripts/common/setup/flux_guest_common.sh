@@ -232,6 +232,20 @@ _flux_write_gpu_mode() {
     _flux_log "gpu_mode=$_mode"
 }
 
+# Session SSOT: which desktop start_gui.sh / start_guest_gui.sh should exec.
+# Mirrors /etc/fluxlinux/gpu_mode. Absent file means "xfce" so every guest
+# installed before this marker existed keeps launching XFCE unchanged.
+_flux_write_session() {
+    _sess="${1:-xfce}"
+    case "$_sess" in
+        xfce|i3) ;;
+        *) _sess=xfce ;;
+    esac
+    mkdir -p /etc/fluxlinux
+    printf '%s\n' "$_sess" > /etc/fluxlinux/session
+    _flux_log "session=$_sess"
+}
+
 _flux_fix_pm_writable() {
     _ref_u=$(_flux_stat_u /etc)
     _ref_g=$(_flux_stat_g /etc)
@@ -254,6 +268,17 @@ _flux_disable_guest_selinux() {
         sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config 2>/dev/null || true
     fi
     setenforce 0 2>/dev/null || true
+}
+
+# Fail the install loudly when the session launcher never landed. The app
+# re-checks the same binaries (GuestSessionCatalog.sessionBinaries) so a guest
+# can never report "installed" with nothing to launch.
+_flux_require_i3() {
+    if [ ! -e /usr/bin/i3 ] && [ ! -e /usr/local/bin/i3 ] \
+        && ! command -v i3 >/dev/null 2>&1; then
+        echo "FluxLinux: ERROR: i3 missing after desktop install"
+        exit 1
+    fi
 }
 
 _flux_require_startxfce4() {

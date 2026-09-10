@@ -71,7 +71,28 @@ if [ ! -d "$CHROOT_ROOT" ]; then
   echo "FluxLinux: ERROR — chroot missing: $CHROOT_ROOT"
   exit 1
 fi
-if [ ! -e "$CHROOT_ROOT/usr/bin/startxfce4" ] && [ ! -e "$CHROOT_ROOT/usr/sbin/startxfce4" ]; then
+# Session SSOT lives in the rootfs (/etc/fluxlinux/session), same as gpu_mode.
+# No file means XFCE, so chroots installed before the marker keep working.
+FLUX_SESSION=xfce
+if [ -r "$CHROOT_ROOT/etc/fluxlinux/session" ]; then
+  FLUX_SESSION=$(tr -d '[:space:]' <"$CHROOT_ROOT/etc/fluxlinux/session")
+fi
+case "$FLUX_SESSION" in
+  xfce|i3) ;;
+  *) FLUX_SESSION=xfce ;;
+esac
+case "$FLUX_SESSION" in
+  i3) FLUX_SESSION_CMD=flux-i3-session ;;
+  *) FLUX_SESSION_CMD=startxfce4 ;;
+esac
+echo "FluxLinux: session=$FLUX_SESSION cmd=$FLUX_SESSION_CMD"
+
+if [ "$FLUX_SESSION" = i3 ]; then
+  if [ ! -e "$CHROOT_ROOT/usr/bin/i3" ] && [ ! -e "$CHROOT_ROOT/usr/local/bin/i3" ]; then
+    echo "FluxLinux: ERROR — i3 missing. Re-run chroot environment setup."
+    exit 1
+  fi
+elif [ ! -e "$CHROOT_ROOT/usr/bin/startxfce4" ] && [ ! -e "$CHROOT_ROOT/usr/sbin/startxfce4" ]; then
   echo "FluxLinux: ERROR — startxfce4 missing. Re-run chroot environment setup."
   exit 1
 fi
@@ -288,16 +309,16 @@ _runas '
   echo \"FluxLinux(guest): GPU mode=\$GPU_MODE\"
 
   if command -v dbus-run-session >/dev/null 2>&1; then
-    exec dbus-run-session -- startxfce4
+    exec dbus-run-session -- $FLUX_SESSION_CMD
   elif command -v dbus-launch >/dev/null 2>&1; then
-    exec dbus-launch --exit-with-session startxfce4
+    exec dbus-launch --exit-with-session $FLUX_SESSION_CMD
   else
-    echo \"FluxLinux(guest): no dbus-launch; starting XFCE without session wrapper\"
-    exec startxfce4
+    echo \"FluxLinux(guest): no dbus-launch; starting session without wrapper\"
+    exec $FLUX_SESSION_CMD
   fi
 '
 "
 rc=$?
-echo "[5/5] XFCE session ended (exit $rc)"
+echo "[5/5] $FLUX_SESSION session ended (exit $rc)"
 echo "========================================"
 exit $rc

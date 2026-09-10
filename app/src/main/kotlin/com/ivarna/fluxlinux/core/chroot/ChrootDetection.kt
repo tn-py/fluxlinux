@@ -3,6 +3,7 @@ package com.ivarna.fluxlinux.core.chroot
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
+import com.ivarna.fluxlinux.core.desktop.GuestSessionCatalog
 import com.ivarna.fluxlinux.core.root.ChrootPaths
 import com.ivarna.fluxlinux.core.root.RootShell
 import java.io.File
@@ -185,16 +186,27 @@ object ChrootDetection {
         )
     }
 
-    fun isXfceInstalled(chrootPath: String = ChrootPaths.CHROOT_PATH): Boolean {
-        val xfce = "$chrootPath/usr/bin/startxfce4"
-        val xfceSbin = "$chrootPath/usr/sbin/startxfce4"
-        if (File(xfce).exists() || File(xfceSbin).exists()) return true
+    fun isXfceInstalled(chrootPath: String = ChrootPaths.CHROOT_PATH): Boolean =
+        isSessionInstalled(chrootPath, GuestSessionCatalog.XFCE)
+
+    /**
+     * True when [session]'s launcher exists inside the chroot rootfs. Direct
+     * [File] access first (works unrooted for app-readable paths), then a root
+     * probe — never on the main thread, where the probe would block.
+     */
+    fun isSessionInstalled(
+        chrootPath: String = ChrootPaths.CHROOT_PATH,
+        session: String = GuestSessionCatalog.XFCE
+    ): Boolean {
+        val candidates = GuestSessionCatalog.sessionBinariesIn(chrootPath, session)
+        if (candidates.any { File(it).exists() }) return true
         if (!RootShell.isRootAvailable()) return false
         // Avoid blocking main thread
         if (Looper.myLooper() == Looper.getMainLooper()) return false
         return try {
+            val test = candidates.joinToString(" || ") { "[ -e '$it' ]" }
             RootShell.capture(
-                "if [ -e '$xfce' ] || [ -e '$xfceSbin' ]; then echo YES; else echo NO; fi",
+                "if $test; then echo YES; else echo NO; fi",
                 timeoutMs = 8_000L
             ).contains("YES")
         } catch (_: Exception) {

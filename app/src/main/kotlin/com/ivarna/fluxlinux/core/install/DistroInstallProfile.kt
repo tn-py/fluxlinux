@@ -571,6 +571,47 @@ data class DistroInstallProfile(
             displayName = "Arch (Rooted)",
         )
 
+        /**
+         * Omarchy-style guest. Deliberately shares ARCH_ROOTFS_* with the Arch
+         * card: it is the same Arch Linux ARM archive, so there is no new
+         * release asset to upload and no second SHA to keep in step. Only the
+         * family/customization scripts and the proot container name differ.
+         */
+        private val OMARCHY_PROOT = DistroInstallProfile(
+            distroId = "omarchy",
+            prootName = "omarchy",
+            method = "proot",
+            rootfsAsset = "rootfs/$ARCH_ROOTFS_NAME",
+            rootfsFileName = ARCH_ROOTFS_NAME,
+            rootfsSha256 = ARCH_ROOTFS_SHA256,
+            rootfsMinBytes = ARCH_ROOTFS_MIN_BYTES,
+            rootfsUrl = ARCH_ROOTFS_URL,
+            familyScript = "omarchy/common/setup/setup_omarchy_family.sh",
+            customizationScript = "omarchy/common/setup/setup_customization_omarchy.sh",
+            hwAccelScript = HW_ACCEL_GUEST,
+            displayName = "Omarchy-style",
+        )
+
+        private val OMARCHY_CHROOT = DistroInstallProfile(
+            distroId = "omarchy_chroot",
+            prootName = "",
+            method = "chroot",
+            rootfsAsset = "rootfs/$ARCH_ROOTFS_NAME",
+            rootfsFileName = ARCH_ROOTFS_NAME,
+            rootfsSha256 = ARCH_ROOTFS_SHA256,
+            rootfsMinBytes = ARCH_ROOTFS_MIN_BYTES,
+            rootfsUrl = ARCH_ROOTFS_URL,
+            familyScript = "omarchy/common/setup/setup_omarchy_family.sh",
+            customizationScript = "omarchy/common/setup/setup_customization_omarchy.sh",
+            hwAccelScript = HW_ACCEL_GUEST,
+            chrootSetupAsset = GUEST_CHROOT_SETUP,
+            chrootUninstallAsset = GUEST_CHROOT_UNINSTALL,
+            chrootPath = ChrootPaths.OMARCHY_CHROOT_PATH,
+            chrootStartGuiScript = "start_guest_gui.sh",
+            chrootStopGuiScript = "stop_guest_gui.sh",
+            displayName = "Omarchy-style (Rooted)",
+        )
+
         private val BY_ID: Map<String, DistroInstallProfile> = mapOf(
             "debian" to DEBIAN_PROOT,
             "debian13_chroot" to DEBIAN_CHROOT,
@@ -597,6 +638,8 @@ data class DistroInstallProfile(
             "parrot_chroot" to PARROT_CHROOT,
             "archlinux" to ARCH_PROOT,
             "archlinux_chroot" to ARCH_CHROOT,
+            "omarchy" to OMARCHY_PROOT,
+            "omarchy_chroot" to OMARCHY_CHROOT,
         )
 
         /** All profiles that ship a distinct rootfs archive (deduped by file name). */

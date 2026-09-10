@@ -5,6 +5,7 @@ import android.util.Base64
 import com.ivarna.fluxlinux.core.data.Distro
 import com.ivarna.fluxlinux.core.data.DistroRepository
 import com.ivarna.fluxlinux.core.data.ScriptManager
+import com.ivarna.fluxlinux.core.desktop.GuestSessionCatalog
 
 /**
  * Minimal base desktop install: rootfs + family (XFCE) + customization.
@@ -59,7 +60,9 @@ object BaseDesktopInstallPlan {
         }.getOrDefault("")
         return buildString {
             append("export FLUX_THEME='").append(theme).append("'\n")
-            append("export FLUX_DESKTOP_ENV='xfce'\n")
+            append("export FLUX_DESKTOP_ENV='")
+                .append(GuestSessionCatalog.sessionFor(distroId))
+                .append("'\n")
             append("export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n\n")
             if (common.isNotBlank()) {
                 append(common).append("\n\n")

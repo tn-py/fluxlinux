@@ -12,5 +12,6 @@ Per-distro reference docs for FluxLinux.
 | **Kali Rolling** | [kali.md](./kali.md) | proot (`kali`) · chroot (`kali_chroot`) |
 | **Parrot 7.2** | [parrot.md](./parrot.md) | proot (`parrot`) · chroot (`parrot_chroot`) |
 | **Arch Linux ARM** | [archlinux.md](./archlinux.md) | proot (`archlinux`) · chroot (`archlinux_chroot`) |
+| **Omarchy-style (Arch)** | [omarchy.md](./omarchy.md) | proot (`omarchy`) · chroot (`omarchy_chroot`) |
 
 Debian-oriented tutorials remain under [`docs/tutorial/`](../tutorial/) (`setup_debian_proot.md`, `setup_debian_chroot.md`). Classification overview: [`docs/distro_classification_matrix.md`](../distro_classification_matrix.md).

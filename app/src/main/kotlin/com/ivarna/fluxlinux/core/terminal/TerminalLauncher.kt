@@ -137,6 +137,10 @@ object TerminalLauncher {
     fun isChrootXfceInstalled(chrootPath: String): Boolean =
         ChrootDetection.isXfceInstalled(chrootPath)
 
+    /** True when [session]'s launcher is installed in the chroot at [chrootPath]. */
+    fun isChrootSessionInstalled(chrootPath: String, session: String): Boolean =
+        ChrootDetection.isSessionInstalled(chrootPath, session)
+
     /** @return true when the distro rootfs exists on disk for [distroId]. */
     fun isDistroInstalledOnFs(ctx: Context, distroId: String): Boolean {
         val profile = com.ivarna.fluxlinux.core.install.DistroInstallProfile.forId(distroId)

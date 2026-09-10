@@ -202,6 +202,7 @@ object TermuxIntentFactory {
             "debian_chroot" -> "debian/chroot/setup/setup_debian_chroot.sh"
             "termux" -> "termux/setup_termux.sh"   // Base Termux deps (proot, X11, etc.)
             "archlinux" -> "arch/common/setup/setup_arch_family.sh"
+            "omarchy" -> "omarchy/common/setup/setup_omarchy_family.sh"
             else -> "debian/common/setup/setup_debian_family.sh"
         }
         

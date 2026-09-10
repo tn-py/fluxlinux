@@ -141,14 +141,32 @@ am start -n "$PKG/com.termux.x11.MainActivity" \
 am start -n "$PKG/com.termux.x11.MainActivity" 2>/dev/null
 sleep 1
 
-# Verify guest setup
+# Verify guest setup. Session comes from /etc/fluxlinux/session inside the
+# rootfs (written by the family setup script); a guest installed before that
+# marker existed has no file and is XFCE, which is the default here.
 ROOTFS="$TERMUX_PREFIX/var/lib/proot-distro/containers/$DISTRO/rootfs"
-if [ ! -e "$ROOTFS/usr/bin/startxfce4" ] && [ ! -e "$ROOTFS/usr/sbin/startxfce4" ]; then
-  echo "FluxLinux: XFCE setup incomplete. Re-run environment setup."
-  exit 1
+FLUX_SESSION=xfce
+if [ -r "$ROOTFS/etc/fluxlinux/session" ]; then
+  FLUX_SESSION=$(tr -d '[:space:]' <"$ROOTFS/etc/fluxlinux/session")
 fi
+case "$FLUX_SESSION" in
+  xfce|i3) ;;
+  *) FLUX_SESSION=xfce ;;
+esac
 
-echo "FluxLinux: startxfce4=READY"
+if [ "$FLUX_SESSION" = i3 ]; then
+  if [ ! -e "$ROOTFS/usr/bin/i3" ] && [ ! -e "$ROOTFS/usr/local/bin/i3" ]; then
+    echo "FluxLinux: i3 setup incomplete. Re-run environment setup."
+    exit 1
+  fi
+  echo "FluxLinux: i3=READY"
+else
+  if [ ! -e "$ROOTFS/usr/bin/startxfce4" ] && [ ! -e "$ROOTFS/usr/sbin/startxfce4" ]; then
+    echo "FluxLinux: XFCE setup incomplete. Re-run environment setup."
+    exit 1
+  fi
+  echo "FluxLinux: startxfce4=READY"
+fi
 
 # Guest GPU mode from setup_hw_accel_debian.sh (/etc/fluxlinux/gpu_mode)
 # turnip → Adreno/Zink; virgl → host virgl_test_server; else softpipe
@@ -170,6 +188,7 @@ if [ "$DISTRO" = "termux" ]; then
   export PULSE_SERVER=tcp:127.0.0.1
   env DISPLAY=:0 startxfce4
   GUEST_RC=$?
+  # termux-native is XFCE-only; FLUX_SESSION never applies here.
 else
   # Single guest script: read mode file inside rootfs (no host quote hell).
   # Prefer bash when present (Debian + Alpine post-family); else sh.
@@ -303,6 +322,20 @@ exit 127
 BWRAP_EOF
     fi
     chmod 755 /usr/bin/bwrap /usr/bin/bubblewrap 2>/dev/null || true
+    # Session launcher, resolved inside the guest so the rootfs stays the SSOT.
+    # flux-i3-session is the wrapper setup_omarchy_family.sh installs; it starts
+    # polybar/picom/dunst and then execs i3.
+    FLUX_SESSION=xfce
+    if [ -r /etc/fluxlinux/session ]; then
+      FLUX_SESSION=$(tr -d "[:space:]" </etc/fluxlinux/session)
+    fi
+    case "$FLUX_SESSION" in
+      i3) FLUX_SESSION_CMD=flux-i3-session ;;
+      *) FLUX_SESSION_CMD=startxfce4 ;;
+    esac
+    export FLUX_SESSION FLUX_SESSION_CMD
+    echo "FluxLinux(guest): session=$FLUX_SESSION cmd=$FLUX_SESSION_CMD"
+
     # Use bash login shell for GUI (avoid zshrc noise); fall back to sh.
     FLUX_SU_SHELL=/bin/bash
     if [ ! -x /bin/bash ] && [ ! -x /usr/bin/bash ]; then
@@ -347,14 +380,14 @@ BWRAP_EOF
         fi
       fi
       if command -v dbus-run-session >/dev/null 2>&1; then
-        exec dbus-run-session -- startxfce4
+        exec dbus-run-session -- $FLUX_SESSION_CMD
       else
-        exec dbus-launch --exit-with-session startxfce4
+        exec dbus-launch --exit-with-session $FLUX_SESSION_CMD
       fi
     "
   '
   GUEST_RC=$?
 fi
 
-echo "FluxLinux: XFCE session ended (exit $GUEST_RC)"
+echo "FluxLinux: $FLUX_SESSION session ended (exit $GUEST_RC)"
 exit $GUEST_RC

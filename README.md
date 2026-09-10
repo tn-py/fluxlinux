@@ -1,7 +1,7 @@
 <div align="center">
   <img src="assets/logo/logo.webp" width="150" />
   <h1>FluxLinux</h1>
-  <p><strong>Run full Linux desktops on Android — 12 distros, PRoot or Chroot, XFCE4, X11, and PulseAudio</strong></p>
+  <p><strong>Run full Linux desktops on Android — 13 guests, PRoot or Chroot, XFCE4 or i3, X11, and PulseAudio</strong></p>
 
   <a href="https://github.com/abhay-byte/fluxlinux">
     <img src="docs/readme/showcase.gif" alt="FluxLinux Showcase" width="100%" />
@@ -54,7 +54,7 @@
 
 ## 🐧 Supported Distros
 
-Twelve guests. **Every one** installs as **PRoot** (no root) or **Chroot** (rooted), with **XFCE4** on the in-app X11 display and **host PulseAudio**. Rootfs archives download on demand from the GitHub [`rootfs`](https://github.com/abhay-byte/fluxlinux/releases/tag/rootfs) tag after an in-app opt-in.
+Thirteen guests. **Every one** installs as **PRoot** (no root) or **Chroot** (rooted), on the in-app X11 display with **host PulseAudio** — twelve on **XFCE4**, plus an Omarchy-style **i3** guest. Rootfs archives download on demand from the GitHub [`rootfs`](https://github.com/abhay-byte/fluxlinux/releases/tag/rootfs) tag after an in-app opt-in.
 
 <div align="center">
   <table>
@@ -73,6 +73,10 @@ Twelve guests. **Every one** installs as **PRoot** (no root) or **Chroot** (root
       <td align="center"><img src="app/src/main/res/drawable/distro_kali.webp" width="48"/><br/><b>Kali</b><br/>Rolling</td>
       <td align="center"><img src="app/src/main/res/drawable/distro_parrot.webp" width="48"/><br/><b>Parrot</b><br/>7.2</td>
       <td align="center"><img src="app/src/main/res/drawable/distro_arch.webp" width="48"/><br/><b>Arch</b><br/>ARM</td>
+    </tr>
+    <tr>
+      <td align="center"><img src="app/src/main/res/drawable/distro_arch.webp" width="48"/><br/><b>Omarchy-style</b><br/>Arch ARM · i3</td>
+      <td colspan="5"></td>
     </tr>
   </table>
 </div>
@@ -93,8 +97,11 @@ Twelve guests. **Every one** installs as **PRoot** (no root) or **Chroot** (root
 | <img src="app/src/main/res/drawable/distro_kali.webp" width="28"/> | **Kali** | Rolling | apt | ✓ | ✓ | ✓ | ✓ |
 | <img src="app/src/main/res/drawable/distro_parrot.webp" width="28"/> | **Parrot** | 7.2 | apt | ✓ | ✓ | ✓ | ✓ |
 | <img src="app/src/main/res/drawable/distro_arch.webp" width="28"/> | **Arch** | ARM | pacman | ✓ | ✓ | ✓ | ✓ |
+| <img src="app/src/main/res/drawable/distro_arch.webp" width="28"/> | **Omarchy-style** | Arch ARM | pacman | ✓ | ✓ | i3 + X11 | ✓ |
 
-Debian also ships the optional extra stacks (KDE Plasma, app/web/data/game/office/graphics). The other eleven use the shared XFCE4 + GPU + theme path.
+Debian also ships the optional extra stacks (KDE Plasma, app/web/data/game/office/graphics). Ten of the others use the shared XFCE4 + GPU + theme path.
+
+**Omarchy-style** is the exception: it reuses the Arch Linux ARM rootfs but runs **i3** with polybar, rofi, dunst and the Omarchy CLI stack in Tokyo Night. It is inspired by [Omarchy](https://omarchy.org), not built from it — upstream is x86_64-only and its desktop is Hyprland, a Wayland compositor that cannot attach to the app's X11 display. See [docs/distro/omarchy.md](docs/distro/omarchy.md).
 
 Per-distro notes: [docs/distro/](docs/distro/).
 

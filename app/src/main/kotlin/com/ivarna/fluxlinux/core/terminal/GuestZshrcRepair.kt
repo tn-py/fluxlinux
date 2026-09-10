@@ -333,7 +333,7 @@ exit 1
         return name == "fedora" || name == "void" || name == "opensuse" ||
             name == "deepin" || name == "manjaro" ||
             name == "ubuntu" || name == "kali" || name == "parrot" ||
-            name == "archlinux"
+            name == "archlinux" || name == "omarchy"
     }
 
     /** apk-based guests: Alpine (v2) + Chimera (v3, musl). */
