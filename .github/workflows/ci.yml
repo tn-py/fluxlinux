@@ -62,7 +62,19 @@ jobs:
       # NOTE: :app declares product flavors (ivarna / zenithblue), so the task
       # is testIvarnaDebugUnitTest — a bare `testDebugUnitTest` does not exist.
       - name: Run unit tests
-        run: ./gradlew :app:testIvarnaDebugUnitTest --stacktrace
+        run: |
+          set -o pipefail
+          ./gradlew :app:testIvarnaDebugUnitTest | tee gradle-test.log
+
+      - name: Summarise test failures
+        if: failure()
+        run: |
+          {
+            echo "### Failing tests"
+            echo '```'
+            grep -E "FAILED$|tests completed" gradle-test.log || echo "(no test-level failures — build or compile error)"
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Publish test report
         if: always()
@@ -191,6 +203,16 @@ jobs:
               pgrep -x i3 >/dev/null && echo "i3 RUNNING" || { echo "i3 NOT RUNNING"; exit 1; }
               pgrep -x polybar >/dev/null && echo "polybar RUNNING" || echo "polybar absent"
             ' 2>&1 | tee render.log
+
+      - name: Findings
+        if: always()
+        run: |
+          echo "════════ Omarchy guest findings ════════"
+          echo "-- optional packages with no aarch64 build --"
+          grep 'unavailable on aarch64' family.log || echo "(none — every optional package resolved)"
+          echo "-- session composition --"
+          grep -E "RUNNING|absent" render.log || echo "(render log missing)"
+          echo "════════════════════════════════════════"
 
       - name: Upload logs and the desktop screenshot
         if: always()
