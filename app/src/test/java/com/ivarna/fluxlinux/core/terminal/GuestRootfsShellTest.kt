@@ -16,7 +16,13 @@ class GuestRootfsShellTest {
         val root = tmp.newFolder("alpine-rootfs")
         File(root, "bin").mkdirs()
         File(root, "bin/busybox").writeBytes(byteArrayOf(0x7f, 0x45, 0x4c, 0x46))
-        Files.createSymbolicLink(File(root, "bin/sh").toPath(), File("/bin/busybox").toPath())
+        // Absolute target must not resolve on the HOST. /bin/busybox was used
+        // here, but it exists on CI runners with busybox installed, which made
+        // the link resolve and the premise below collapse.
+        Files.createSymbolicLink(
+            File(root, "bin/sh").toPath(),
+            File("/flux-nonexistent-guest-root/bin/busybox").toPath()
+        )
         // Host-style exists() is false for absolute guest symlink
         assertFalse(File(root, "bin/sh").exists())
         assertTrue(TerminalLauncher.guestRootfsHasShell(root))

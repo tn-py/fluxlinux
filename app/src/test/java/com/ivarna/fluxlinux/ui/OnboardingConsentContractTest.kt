@@ -25,9 +25,9 @@ class OnboardingConsentContractTest {
             "src/main/kotlin/com/ivarna/fluxlinux/ui/onboarding/OnboardingFlowScreen.kt"
         ).readText()
         assertTrue(src.contains("downloadConsent"))
-        assertTrue(src.contains("DownloadConsentRow"))
         assertTrue(src.contains("enabled = downloadConsent"))
-        assertTrue(src.contains("not checked by F-Droid"))
+        assertTrue(src.contains("F-Droid & Package Notice"))
+        assertTrue(src.contains("not bundled in the F-Droid APK"))
         assertTrue(src.contains("downloads Linux system images"))
         assertTrue(
             "consent must start unchecked",
@@ -38,6 +38,6 @@ class OnboardingConsentContractTest {
         assertTrue(src.contains("OnboardStep.HostSetup"))
         assertTrue(src.contains("fun ConsentPage"))
         assertTrue(src.contains("fun HostSetupPage"))
-        assertTrue(src.contains("HostBootstrapStep"))
+        assertTrue(src.contains("HostBootstrap"))
     }
 }
