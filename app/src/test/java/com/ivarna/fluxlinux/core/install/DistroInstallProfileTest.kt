@@ -1,5 +1,6 @@
 package com.ivarna.fluxlinux.core.install
 
+import com.ivarna.fluxlinux.core.data.DistroRepository
 import com.ivarna.fluxlinux.core.data.terminalComponentFor
 import com.ivarna.fluxlinux.core.root.ChrootPaths
 import org.junit.Assert.assertEquals
@@ -306,7 +307,6 @@ class DistroInstallProfileTest {
             // added to BY_ID and silently missed here.
             "omarchy", "omarchy_chroot"
         ).forEach { assertTrue(ids.contains(it)) }
-        assertEquals(26, ids.size)
     }
 
     @Test
@@ -355,6 +355,26 @@ class DistroInstallProfileTest {
             "parrot", "parrot_chroot",
             "archlinux", "archlinux_chroot"
         ).forEach { assertTrue(ids.contains(it)) }
-        assertEquals(24, ids.size)
+    }
+
+    /**
+     * allInstallable() is a hand-written list while the cards come from
+     * DistroRepository, so the two drift silently: adding the Omarchy profiles
+     * to BY_ID without adding them here left the guest missing from every
+     * consumer that enumerates installables. Pin the invariant rather than a
+     * count, so a new guest never needs this test edited.
+     */
+    @Test
+    fun allInstallable_matchesTheInstallableCardCatalog() {
+        val profiles = DistroInstallProfile.allInstallable().map { it.distroId }.toSet()
+        val cards = DistroRepository.supportedDistros
+            .filterNot { it.comingSoon }
+            .map { it.id }
+            .toSet()
+        assertEquals(
+            "allInstallable() must list exactly the installable cards",
+            cards,
+            profiles
+        )
     }
 }
