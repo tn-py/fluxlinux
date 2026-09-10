@@ -1,0 +1,20 @@
+{
+  "name": "FluxLinux",
+  "image": "mcr.microsoft.com/devcontainers/java:17-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/android-sdk:1": {},
+    // Docker-in-Docker + QEMU is what lets an aarch64 Arch guest run here.
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "postCreateCommand": "sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck qemu-user-static binfmt-support && docker run --privileged --rm tonistiigi/binfmt --install arm64 || true",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "fwcd.kotlin",
+        "timonwong.shellcheck",
+        "github.vscode-github-actions"
+      ]
+    }
+  },
+  "remoteUser": "vscode"
+}

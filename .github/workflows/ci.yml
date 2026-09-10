@@ -1,0 +1,206 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Tier 1: shell syntax + lint. No Android, no emulation. Seconds. ──────
+  scripts:
+    name: Guest scripts (syntax + shellcheck)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: POSIX syntax check every guest script
+        run: |
+          fail=0
+          while IFS= read -r f; do
+            if sh -n "$f" 2>/dev/null || bash -n "$f"; then
+              echo "ok   $f"
+            else
+              echo "FAIL $f"; fail=1
+            fi
+          done < <(find app/src/main/assets/scripts scripts -name '*.sh' -type f | sort)
+          exit $fail
+        shell: bash
+
+      - name: shellcheck
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+          # Errors gate the build; warnings are reported but do not fail, since
+          # these scripts target several near-POSIX guest shells on purpose.
+          echo '### shellcheck warnings' >> "$GITHUB_STEP_SUMMARY"
+          find app/src/main/assets/scripts -name '*.sh' -type f -print0 \
+            | xargs -0 shellcheck -S warning -f gcc 2>&1 \
+            | tee -a "$GITHUB_STEP_SUMMARY" || true
+          find app/src/main/assets/scripts -name '*.sh' -type f -print0 \
+            | xargs -0 shellcheck -S error -f gcc
+
+  # ── Tier 2: does the Kotlin actually compile, and do the tests pass? ─────
+  unit-tests:
+    name: Unit tests (JVM)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # NOTE: :app declares product flavors (ivarna / zenithblue), so the task
+      # is testIvarnaDebugUnitTest — a bare `testDebugUnitTest` does not exist.
+      - name: Run unit tests
+        run: ./gradlew :app:testIvarnaDebugUnitTest --stacktrace
+
+      - name: Publish test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: app/build/reports/tests/
+          if-no-files-found: ignore
+
+  # ── Tier 3: run the guest setup for real, in an aarch64 Arch rootfs. ─────
+  # This is the tier that answers "do these packages exist on ALARM aarch64",
+  # which no amount of static checking can.
+  guest-install:
+    name: Omarchy guest install (aarch64)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      # Emulate aarch64 on the x86_64 runner. If this repo is public, swapping
+      # runs-on to `ubuntu-24.04-arm` makes this native and roughly 5x faster;
+      # drop this step in that case.
+      - uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Fetch the pinned Arch Linux ARM rootfs
+        run: |
+          set -euo pipefail
+          # Same archive DistroInstallProfile.ARCH_ROOTFS_URL pins, so this
+          # tests the bytes users actually get.
+          URL=https://github.com/abhay-byte/fluxlinux/releases/download/rootfs/archlinux_arm_rootfs.tar.xz
+          EXPECT=40209ef6318d3aad732299d46ce224c6a0ecded80b6f8091f5e38b40fa031d75
+          curl -fL --retry 3 -o rootfs.tar.xz "$URL"
+          echo "$EXPECT  rootfs.tar.xz" | sha256sum -c -
+          docker import --platform linux/arm64 rootfs.tar.xz fluxguest:arch
+
+      - name: Build the family payload exactly as the app does
+        run: |
+          set -euo pipefail
+          # Mirrors BaseDesktopInstallPlan.familySetupPayload(): env, then
+          # flux_guest_common.sh, then the family script.
+          {
+            echo "export FLUX_THEME='dark'"
+            echo "export FLUX_DESKTOP_ENV='i3'"
+            echo "export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            echo
+            cat app/src/main/assets/scripts/common/setup/flux_guest_common.sh
+            echo
+            cat app/src/main/assets/scripts/omarchy/common/setup/setup_omarchy_family.sh
+          } > family_payload.sh
+          {
+            echo "export FLUX_THEME='dark'"
+            echo "export FLUX_SKIP_POKEMON='1'"
+            echo "export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            echo
+            cat app/src/main/assets/scripts/omarchy/common/setup/setup_customization_omarchy.sh
+          } > custom_payload.sh
+
+      - name: Run family setup in the guest
+        run: |
+          set -euo pipefail
+          docker run --platform linux/arm64 --name guest \
+            -v "$PWD:/work" -w /work fluxguest:arch \
+            /bin/sh /work/family_payload.sh 2>&1 | tee family.log
+          docker commit guest fluxguest:installed
+
+      - name: Assert the guest is launchable
+        run: |
+          set -euo pipefail
+          docker run --platform linux/arm64 --rm fluxguest:installed /bin/sh -euc '
+            fail=0
+            check() { if [ -e "$1" ]; then echo "ok   $1"; else echo "MISS $1"; fail=1; fi; }
+            check /usr/bin/i3
+            check /usr/local/bin/flux-i3-session
+            check /home/flux/.config/i3/config
+            check /etc/fluxlinux/session
+            # The marker start_gui.sh reads. Wrong value = guest execs startxfce4,
+            # which this guest does not have.
+            s=$(cat /etc/fluxlinux/session 2>/dev/null || echo MISSING)
+            if [ "$s" = i3 ]; then echo "ok   session=i3"; else echo "BAD  session=$s"; fail=1; fi
+            id flux >/dev/null 2>&1 && echo "ok   user flux" || { echo "MISS user flux"; fail=1; }
+            exit $fail
+          '
+
+      - name: Report which optional packages had no aarch64 build
+        if: always()
+        run: |
+          {
+            echo "### Optional packages skipped on ALARM aarch64"
+            echo
+            if grep -q 'unavailable on aarch64' family.log; then
+              echo '```'
+              grep 'unavailable on aarch64' family.log || true
+              echo '```'
+              echo
+              echo "Each line above is a package the Omarchy guest silently does without."
+            else
+              echo "None — every optional package resolved."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run customization in the guest
+        run: |
+          set -euo pipefail
+          docker run --platform linux/arm64 --name themed \
+            -v "$PWD:/work" -w /work fluxguest:installed \
+            /bin/sh /work/custom_payload.sh 2>&1 | tee custom.log
+          docker commit themed fluxguest:themed
+
+      # ── Tier 4: does the session actually come up and draw anything? ──────
+      # Xvfb is not the Lorie X server, but if i3 + polybar + dunst cannot
+      # compose a screen here, they certainly will not on a phone.
+      - name: Headless render smoke test
+        run: |
+          set -euo pipefail
+          docker run --platform linux/arm64 --name render \
+            -v "$PWD:/out" fluxguest:themed /bin/sh -c '
+              pacman -S --noconfirm --needed xorg-server-xvfb imagemagick >/dev/null 2>&1 || true
+              Xvfb :99 -screen 0 1280x720x24 & sleep 5
+              export DISPLAY=:99 HOME=/home/flux
+              su -s /bin/sh flux -c "DISPLAY=:99 HOME=/home/flux /usr/local/bin/flux-i3-session" &
+              sleep 25
+              import -window root /out/i3-session.png 2>/dev/null \
+                || xwd -root -silent > /out/i3-session.xwd
+              pgrep -x i3 >/dev/null && echo "i3 RUNNING" || { echo "i3 NOT RUNNING"; exit 1; }
+              pgrep -x polybar >/dev/null && echo "polybar RUNNING" || echo "polybar absent"
+            ' 2>&1 | tee render.log
+
+      - name: Upload logs and the desktop screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: omarchy-guest-evidence
+          path: |
+            family.log
+            custom.log
+            render.log
+            i3-session.png
+            i3-session.xwd
+          if-no-files-found: warn
