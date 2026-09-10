@@ -657,6 +657,7 @@ data class DistroInstallProfile(
             DEEPIN_CHROOT, CHIMERA_CHROOT, MANJARO_CHROOT,
             UBUNTU_PROOT, KALI_PROOT, PARROT_PROOT, ARCH_PROOT,
             UBUNTU_CHROOT, KALI_CHROOT, PARROT_CHROOT, ARCH_CHROOT,
+            OMARCHY_PROOT, OMARCHY_CHROOT,
         )
 
         fun forId(distroId: String): DistroInstallProfile? = BY_ID[distroId]

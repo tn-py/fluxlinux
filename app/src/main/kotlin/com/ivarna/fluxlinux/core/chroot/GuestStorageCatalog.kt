@@ -29,6 +29,7 @@ object GuestStorageCatalog {
         ChrootPaths.KALI_CHROOT_PATH,
         ChrootPaths.PARROT_CHROOT_PATH,
         ChrootPaths.ARCH_CHROOT_PATH,
+        ChrootPaths.OMARCHY_CHROOT_PATH,
     )
 
     val REFUSED_HOST_PATHS: Set<String> = setOf(

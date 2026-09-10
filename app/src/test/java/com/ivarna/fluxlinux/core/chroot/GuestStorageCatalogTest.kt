@@ -11,9 +11,9 @@ import org.junit.Test
 class GuestStorageCatalogTest {
 
     @Test
-    fun installableChroots_containsExactly12InstallableIds() {
+    fun installableChroots_containsEveryInstallableChrootId() {
         val distros = GuestStorageCatalog.installableChroots()
-        assertEquals(12, distros.size)
+        assertEquals(13, distros.size)
         val ids = distros.map { it.id }.toSet()
         assertTrue(ids.contains("debian13_chroot"))
         assertTrue(ids.contains("alpine_chroot"))
@@ -27,6 +27,7 @@ class GuestStorageCatalogTest {
         assertTrue(ids.contains("kali_chroot"))
         assertTrue(ids.contains("parrot_chroot"))
         assertTrue(ids.contains("archlinux_chroot"))
+        assertTrue(ids.contains("omarchy_chroot"))
     }
 
     @Test
@@ -40,13 +41,14 @@ class GuestStorageCatalogTest {
     }
 
     @Test
-    fun installableProots_containsExactly12InstallableIds() {
+    fun installableProots_containsEveryInstallableProotId() {
         val distros = GuestStorageCatalog.installableProots()
-        assertEquals(12, distros.size)
+        assertEquals(13, distros.size)
         val ids = distros.map { it.id }.toSet()
         assertTrue(ids.contains("debian"))
         assertTrue(ids.contains("alpine"))
         assertTrue(ids.contains("fedora"))
+        assertTrue(ids.contains("omarchy"))
         assertFalse(ids.contains("debian13_chroot"))
     }
 
@@ -85,7 +87,7 @@ class GuestStorageCatalogTest {
             assertTrue("Path $path must be in KNOWN_CHROOT_PATHS", path in GuestStorageCatalog.KNOWN_CHROOT_PATHS)
             resolvedPaths.add(path!!)
         }
-        assertEquals(12, resolvedPaths.size)
+        assertEquals(13, resolvedPaths.size)
 
         // Invalid / proot / aggregate IDs return null
         assertNull(GuestStorageCatalog.chrootPathOrNull(GuestStorageCatalog.ALL_CHROOT_ID))

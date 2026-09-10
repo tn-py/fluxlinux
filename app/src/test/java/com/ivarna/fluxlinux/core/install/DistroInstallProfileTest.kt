@@ -301,9 +301,12 @@ class DistroInstallProfileTest {
         listOf(
             "deepin", "deepin_chroot",
             "chimera", "chimera_chroot",
-            "manjaro", "manjaro_chroot"
+            "manjaro", "manjaro_chroot",
+            // allInstallable() is a hand-written list, so a new profile can be
+            // added to BY_ID and silently missed here.
+            "omarchy", "omarchy_chroot"
         ).forEach { assertTrue(ids.contains(it)) }
-        assertEquals(24, ids.size)
+        assertEquals(26, ids.size)
     }
 
     @Test

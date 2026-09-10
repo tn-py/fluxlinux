@@ -211,8 +211,8 @@ class DistroRepositoryTest {
     @Test
     fun installableCards_splitEvenlyBetweenProotAndChroot() {
         val available = DistroRepository.supportedDistros.filter { !it.comingSoon }
-        assertEquals(12, available.count { it.prootSupported })
-        assertEquals(12, available.count { it.chrootSupported })
+        assertEquals(13, available.count { it.prootSupported })
+        assertEquals(13, available.count { it.chrootSupported })
         assertTrue(available.none { it.prootSupported && it.chrootSupported })
     }
 

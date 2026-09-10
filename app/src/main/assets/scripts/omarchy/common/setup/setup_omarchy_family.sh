@@ -209,8 +209,7 @@ _flux_omarchy_optional \
     jq less unzip wget man-db \
     imagemagick imv \
     xclip xdotool \
-    ttf-jetbrains-mono-nerd papirus-icon-theme \
-    kvantum
+    ttf-jetbrains-mono-nerd papirus-icon-theme
 
 _flux_ensure_dbus
 

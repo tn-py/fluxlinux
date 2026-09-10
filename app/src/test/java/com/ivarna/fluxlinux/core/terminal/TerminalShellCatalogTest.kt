@@ -169,9 +169,9 @@ class TerminalShellCatalogTest {
         assertEquals(
             listOf(
                 "PROOT", "PROOT", "PROOT", "PROOT", "PROOT", "PROOT", "PROOT", "PROOT",
-                "PROOT", "PROOT", "PROOT", "PROOT",
+                "PROOT", "PROOT", "PROOT", "PROOT", "PROOT",
                 "CHROOT", "CHROOT", "CHROOT", "CHROOT", "CHROOT", "CHROOT", "CHROOT", "CHROOT",
-                "CHROOT", "CHROOT", "CHROOT", "CHROOT",
+                "CHROOT", "CHROOT", "CHROOT", "CHROOT", "CHROOT",
                 "OPTIONAL"
             ),
             sections.map { it.subtitle }
@@ -181,9 +181,11 @@ class TerminalShellCatalogTest {
                 "DEBIAN SHELL", "ALPINE SHELL", "FEDORA SHELL", "VOID SHELL", "OPENSUSE SHELL",
                 "DEEPIN SHELL", "CHIMERA SHELL", "MANJARO SHELL",
                 "UBUNTU SHELL", "KALI SHELL", "PARROT SHELL", "ARCHLINUX SHELL",
+                "OMARCHY SHELL",
                 "DEBIAN SHELL", "ALPINE SHELL", "FEDORA SHELL", "VOID SHELL", "OPENSUSE SHELL",
                 "DEEPIN SHELL", "CHIMERA SHELL", "MANJARO SHELL",
                 "UBUNTU SHELL", "KALI SHELL", "PARROT SHELL", "ARCHLINUX SHELL",
+                "OMARCHY SHELL",
                 "HOST"
             ),
             sections.map { it.title }
